@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "969435393440",
+    "firebase_url": "https://smart-gardener-bf768.firebaseio.com",
+    "project_id": "smart-gardener-bf768",
+    "storage_bucket": "smart-gardener-bf768.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:969435393440:android:a969c8ed759df566",
+        "android_client_info": {
+          "package_name": "com.example.sethu.myapplication"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "969435393440-hff8ggfrrvrqfrvra335eq13emkss6ng.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.sethu.myapplication",
+            "certificate_hash": "d957603a9c18b0db144951dfd198abfe09b09a60"
+          }
+        },
+        {
+          "client_id": "969435393440-628okdqckj84e27f7mkftsp777ttc7at.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAsY9fGiB6Y7c5vyTujS-2_3A83hcuecNo"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "969435393440-628okdqckj84e27f7mkftsp777ttc7at.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
