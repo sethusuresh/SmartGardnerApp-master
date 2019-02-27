@@ -63,7 +63,7 @@ public class HomePageActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 Map<String, Object> value = (Map<String, Object>) dataSnapshot.getValue();
-                if(value.get("waterNow").equals("true")){
+                if(value != null && value.get("waterNow") != null && value.get("waterNow").equals("true")){
                    showGif();
                 }
                 else{
@@ -83,6 +83,8 @@ public class HomePageActivity extends AppCompatActivity {
         if(user != null){
             if(user.getPhotoUrl() != null)
                 Glide.with(this).load(user.getPhotoUrl()).apply(RequestOptions.circleCropTransform()).into((ImageView)findViewById(R.id.PROFILE_IMAGE));
+            else
+                Glide.with(this).load(R.drawable.default_profile_pic).apply(RequestOptions.circleCropTransform()).into((ImageView)findViewById(R.id.PROFILE_IMAGE));
         }
     }
 
@@ -99,6 +101,13 @@ public class HomePageActivity extends AppCompatActivity {
 
     public void onProfilePicClick (View view){
         signOut();
+    }
+
+    @Override
+    public void onBackPressed() {
+        Toast.makeText(HomePageActivity.this, "Logged-Out Successfully", Toast.LENGTH_SHORT).show();
+        signOut();
+        super.onBackPressed();
     }
 
     private void saveConfigInDB (String morningTime, String eveningTime, String daysOfWeek) {
