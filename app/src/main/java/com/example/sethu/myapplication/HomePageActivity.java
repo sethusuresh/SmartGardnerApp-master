@@ -3,20 +3,20 @@ package com.example.sethu.myapplication;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -26,7 +26,11 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.functions.FirebaseFunctions;
+import com.google.firebase.functions.FirebaseFunctionsException;
+import com.google.firebase.functions.HttpsCallableResult;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class HomePageActivity extends AppCompatActivity {
@@ -34,17 +38,51 @@ public class HomePageActivity extends AppCompatActivity {
     DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference();
     FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
     DatabaseReference userRef = rootRef.child(user.getUid());
+    private FirebaseFunctions mFunctions;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.home_page);
-        RadioGroup radioGroup = findViewById(R.id.radioGroup);
-        RadioButton dailyRadioButton = (RadioButton) radioGroup.getChildAt(0);
+        //RadioGroup radioGroup = findViewById(R.id.radioGroup);
+        //RadioButton dailyRadioButton = (RadioButton) radioGroup.getChildAt(0);
         ImageView plantWateringGif = findViewById(R.id.PLANT_WATERING_GIF);
         plantWateringGif.setVisibility(View.INVISIBLE);
-        dailyRadioButton.setChecked(true);
+        ImageView configButton = findViewById(R.id.CONFIG);
+        configButton.setBackgroundColor(Color.parseColor("#00000000"));
+        mFunctions = FirebaseFunctions.getInstance();
+        //dailyRadioButton.setChecked(true);
         loadUserProfile();
+        getTransactionData();
+    }
+
+    /*private void loadGraph(Map graphDataMap) {
+        List<Entry> entries = new ArrayList<Entry>();
+        for(Object key : graphDataMap.keySet()){
+            entries.add(new Entry(key.to, graphDataMap.get(key)));
+        //entries.add(new Entry(graphValueMap., data.getValueY()));
+        }
+    }*/
+
+    private Task<String> getTransactionData() {
+        // Create the arguments to the callable function.
+        String text = "WEEK";
+        Map<String, Object> data = new HashMap<>();
+        data.put("filterBy", text);
+
+        return mFunctions
+                .getHttpsCallable("getTransactionData")
+                .call(data)
+                .continueWith(new Continuation<HttpsCallableResult, String>() {
+                    @Override
+                    public String then(@NonNull Task<HttpsCallableResult> task) throws Exception {
+                        // This continuation runs on either success or failure, but if the task
+                        // has failed then getResult() will throw an Exception which will be
+                        // propagated down.
+                        String result = task.getResult().getData().toString();
+                        return result;
+                    }
+                });
     }
 
     private void showGif() {
@@ -66,6 +104,10 @@ public class HomePageActivity extends AppCompatActivity {
                 if(value != null && value.get("waterNow") != null && value.get("waterNow").equals("true")){
                    showGif();
                 }
+                else if(value != null && value.get("weekReport") != null){
+                    //write graph creation logic here
+                    Map weekReport = (HashMap)value.get("weekReport");
+                }
                 else{
                     ImageView plantWateringGif = findViewById(R.id.PLANT_WATERING_GIF);
                     plantWateringGif.setVisibility(View.INVISIBLE);
@@ -77,6 +119,31 @@ public class HomePageActivity extends AppCompatActivity {
                 Log.w("MainActivity", "Failed to read value.", error.toException());
             }
         });
+
+        //Handle exceptions from Firebase functions
+        getTransactionData()
+                .addOnCompleteListener(new OnCompleteListener<String>() {
+                    @Override
+                    public void onComplete(@NonNull Task<String> task) {
+                        if (!task.isSuccessful()) {
+                            Exception e = task.getException();
+                            if (e instanceof FirebaseFunctionsException) {
+                                FirebaseFunctionsException ffe = (FirebaseFunctionsException) e;
+                                FirebaseFunctionsException.Code code = ffe.getCode();
+                                Object details = ffe.getDetails();
+                            }
+
+                            // [START_EXCLUDE]
+                            Log.w("FIREBASE Functions", "getTransactionData:onFailure", e);
+                            return;
+                            // [END_EXCLUDE]
+                        }
+
+                        // [START_EXCLUDE]
+                        String result = task.getResult();
+                        // [END_EXCLUDE]
+                    }
+                });
     }
 
     private void loadUserProfile() {
@@ -121,10 +188,11 @@ public class HomePageActivity extends AppCompatActivity {
         String eveningTime = null;
         String daysOfWeek = null;
         boolean canProceed;
-        RadioGroup radioGroup = findViewById(R.id.radioGroup);
-        int selectedRadioId = radioGroup.getCheckedRadioButtonId();
-        RadioButton radioButton = findViewById(selectedRadioId);
-        int position = radioGroup.indexOfChild(radioButton);
+        //RadioGroup radioGroup = findViewById(R.id.radioGroup);
+        //int selectedRadioId = radioGroup.getCheckedRadioButtonId();
+        //RadioButton radioButton = findViewById(selectedRadioId);
+        //int position = radioGroup.indexOfChild(radioButton);
+        int position = 0;
         if(position == 0){
             //Daily
             SharedPreferences sharedPref = getSharedPreferences("SmartGardnerData", Context.MODE_PRIVATE);
