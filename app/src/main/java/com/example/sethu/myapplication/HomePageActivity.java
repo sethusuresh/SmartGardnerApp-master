@@ -3,7 +3,6 @@ package com.example.sethu.myapplication;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -44,16 +43,23 @@ public class HomePageActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.home_page);
-        //RadioGroup radioGroup = findViewById(R.id.radioGroup);
-        //RadioButton dailyRadioButton = (RadioButton) radioGroup.getChildAt(0);
         ImageView plantWateringGif = findViewById(R.id.PLANT_WATERING_GIF);
         plantWateringGif.setVisibility(View.INVISIBLE);
-        ImageView configButton = findViewById(R.id.CONFIG);
-        configButton.setBackgroundColor(Color.parseColor("#00000000"));
         mFunctions = FirebaseFunctions.getInstance();
-        //dailyRadioButton.setChecked(true);
         loadUserProfile();
         getTransactionData();
+    }
+
+    private void showSelectedConfig() {
+        SharedPreferences sharedPref = getSharedPreferences("SmartGardnerData",Context.MODE_PRIVATE);
+        String daysOfWeek = sharedPref.getString(getString(R.string.cust_fet_days_of_week), getString(R.string.cust_fet_days));
+        String morningTime = sharedPref.getString(getString(R.string.cust_fet_morning_time), "01:00:00");
+        String eveningTime = sharedPref.getString(getString(R.string.cust_fet_evening_time), "01:00:00");
+        ImageView plantWateringGif = findViewById(R.id.PLANT_WATERING_GIF);
+        plantWateringGif.setVisibility(View.INVISIBLE);
+        TextView selectedBasicConfig = findViewById (R.id.selected_config);
+        selectedBasicConfig.setVisibility(View.VISIBLE);
+        selectedBasicConfig.setText(daysOfWeek+"\nMORNING: "+ morningTime + " am\n" + "EVENING: " + eveningTime +" pm");
     }
 
     /*private void loadGraph(Map graphDataMap) {
@@ -96,6 +102,7 @@ public class HomePageActivity extends AppCompatActivity {
     @Override
     public void onStart () {
         super.onStart();
+        showSelectedConfig();
         // Read from the database
         userRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -175,71 +182,6 @@ public class HomePageActivity extends AppCompatActivity {
         Toast.makeText(HomePageActivity.this, "Logged-Out Successfully", Toast.LENGTH_SHORT).show();
         signOut();
         super.onBackPressed();
-    }
-
-    private void saveConfigInDB (String morningTime, String eveningTime, String daysOfWeek) {
-        userRef.child("morningTime").setValue(morningTime);
-        userRef.child("eveningTime").setValue(eveningTime);
-        userRef.child("daysOfWeek").setValue(daysOfWeek);
-    }
-
-    public void saveConfig(View view) {
-        String morningTime = null;
-        String eveningTime = null;
-        String daysOfWeek = null;
-        boolean canProceed;
-        //RadioGroup radioGroup = findViewById(R.id.radioGroup);
-        //int selectedRadioId = radioGroup.getCheckedRadioButtonId();
-        //RadioButton radioButton = findViewById(selectedRadioId);
-        //int position = radioGroup.indexOfChild(radioButton);
-        int position = 0;
-        if(position == 0){
-            //Daily
-            SharedPreferences sharedPref = getSharedPreferences("SmartGardnerData", Context.MODE_PRIVATE);
-            morningTime = sharedPref.getString(getString(R.string.basic_fet_morning_time), "01:00:00");
-            eveningTime = sharedPref.getString(getString(R.string.basic_fet_evening_time), "01:00:00");
-            daysOfWeek = getString(R.string.cust_fet_days);
-            canProceed = true;
-        }
-        else if(position == 1){
-            //Cust
-            SharedPreferences sharedPref = getSharedPreferences("SmartGardnerData",Context.MODE_PRIVATE);
-            daysOfWeek = sharedPref.getString(getString(R.string.cust_fet_days_of_week), getString(R.string.cust_fet_days));
-            morningTime = sharedPref.getString(getString(R.string.cust_fet_morning_time), "01:00:00");
-            eveningTime = sharedPref.getString(getString(R.string.cust_fet_evening_time), "01:00:00");
-            canProceed = true;
-        }
-        else if(position == 2){
-            //Adv
-            TextView selectedBasicConfig = findViewById (R.id.selected_config);
-            selectedBasicConfig.setText("");
-            Toast.makeText(this, "Coming soon!!!", Toast.LENGTH_SHORT).show();
-            canProceed = false;
-        }
-        else{
-            canProceed = false;
-            Toast.makeText(this, "Please select an option!!!", Toast.LENGTH_SHORT).show();
-        }
-
-        if(canProceed){
-            //show user selection
-            ImageView plantWateringGif = findViewById(R.id.PLANT_WATERING_GIF);
-            plantWateringGif.setVisibility(View.INVISIBLE);
-            TextView selectedBasicConfig = findViewById (R.id.selected_config);
-            selectedBasicConfig.setVisibility(View.VISIBLE);
-            selectedBasicConfig.setText(daysOfWeek+"\nMORNING: "+ morningTime + " am\n" + "EVENING: " + eveningTime +" pm");
-            //saving config to firebase database
-            saveConfigInDB(morningTime, eveningTime, daysOfWeek);
-        }
-    }
-
-    public void dailyConfig(View view){
-        Intent intent = new Intent(HomePageActivity.this, BasicFetActivity.class);
-        startActivity(intent);
-    }
-
-    public void advancedConfig(View view){
-        Toast.makeText(this, "Coming soon!!!", Toast.LENGTH_SHORT).show();
     }
 
     public void customConfig(View view){

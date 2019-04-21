@@ -14,6 +14,10 @@ import android.widget.Toast;
 
 import com.example.sethu.myapplication.DTO.BasicConfigDTO;
 import com.example.sethu.myapplication.DTO.CustomConfigDTO;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.sql.Time;
 import java.text.ParseException;
@@ -34,6 +38,9 @@ public class CustomFetActivity extends Activity{
     TimeUtil timeUtil = new TimeUtil();
     boolean waterMorning = true;
     boolean waterEvening = false;
+    DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference();
+    FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+    DatabaseReference userRef = rootRef.child(user.getUid());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -149,6 +156,12 @@ public class CustomFetActivity extends Activity{
         return daysSelected;
     }
 
+    private void saveConfigInDB (String morningTime, String eveningTime, String daysOfWeek) {
+        userRef.child("morningTime").setValue(morningTime);
+        userRef.child("eveningTime").setValue(eveningTime);
+        userRef.child("daysOfWeek").setValue(daysOfWeek);
+    }
+
     public void saveCustConfig(View view) throws ParseException {
         String userConfig = "";
         Spinner morningHourSpinner = findViewById(R.id.cust_mor_hr_spinner);
@@ -189,6 +202,7 @@ public class CustomFetActivity extends Activity{
         editor.putString(getString(R.string.cust_fet_evening_time), customConfigDTO.getBasicConfigDTO().getEveningTime().toString());
         editor.putString(getString(R.string.cust_fet_days_of_week), customConfigDTO.getDay().toString());
         editor.apply();
+        saveConfigInDB(customConfigDTO.getBasicConfigDTO().getMorningTime().toString(), customConfigDTO.getBasicConfigDTO().getEveningTime().toString(), customConfigDTO.getDay().toString());
         Toast.makeText(this, "new timings saved successfully!!!", Toast.LENGTH_SHORT).show();
     }
 
