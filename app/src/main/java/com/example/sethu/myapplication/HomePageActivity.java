@@ -12,8 +12,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
+import com.example.sethu.myapplication.DTO.UserDTO;
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -28,12 +35,25 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.functions.FirebaseFunctions;
 import com.google.firebase.functions.FirebaseFunctionsException;
 import com.google.firebase.functions.HttpsCallableResult;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
+import Enums.Activity;
+import Util.Config;
+import Util.URLConstants;
+
 public class HomePageActivity extends AppCompatActivity {
 
+    Gson gson = new GsonBuilder().create();
+    URLConstants urlConstants = new URLConstants();
+    Config config = new Config();
     DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference();
     FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
     DatabaseReference userRef = rootRef.child(user.getUid());
@@ -43,11 +63,51 @@ public class HomePageActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.home_page);
+        logUserActivity(Activity.LOG_IN.toString());
         ImageView plantWateringGif = findViewById(R.id.PLANT_WATERING_GIF);
         plantWateringGif.setVisibility(View.INVISIBLE);
         mFunctions = FirebaseFunctions.getInstance();
         loadUserProfile();
         getTransactionData();
+    }
+
+    private void logUserActivity(String activity) {
+        UserDTO userActivity = new UserDTO();
+        userActivity.setUserId(user.getUid());
+        userActivity.setActivity(activity);
+        userActivity.setTargetDevice("None");
+        userActivity.setTime(Calendar.getInstance().getTime().toString());
+        userActivity.setUserName(user.getEmail());
+        String URL = urlConstants.getLogUserActivityURL(config.getHostName());
+        try {
+            RestInvocation(userActivity, URL, Request.Method.POST);
+        } catch (JSONException e) {
+            Log.e("logUserActivity", "Error in Request object creation");
+            e.printStackTrace();
+        }
+    }
+
+    private void RestInvocation(UserDTO userActivity, String URL, int requestType) throws JSONException {
+        JSONObject requestObject = new JSONObject(gson.toJson(userActivity));
+        RequestQueue requestQueue = Volley.newRequestQueue(this);
+        JsonObjectRequest request = new JsonObjectRequest(
+                requestType,
+                URL,
+                requestObject,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Log.d("logUserActivity", "Rest call to log user activity completed with status:- " + response.toString());
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e("logUserActivity", "Rest call to log user activity FAILED with status:- 500" + error.getMessage());
+                    }
+                }
+        );
+        requestQueue.add(request);
     }
 
     private void showSelectedConfig() {
