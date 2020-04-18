@@ -20,7 +20,10 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
-import com.example.sethu.myapplication.DTO.UserDTO;
+import com.example.sethu.myapplication.DTO.DeviceDTO;
+import com.example.sethu.myapplication.DTO.UserActionDTO;
+import com.example.sethu.myapplication.DTO.UserActivityDTO;
+import com.example.sethu.myapplication.DTO.WaterConfigDTO;
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -47,6 +50,7 @@ import java.util.Map;
 
 import Enums.Activity;
 import Util.Config;
+import Util.ResponseObject;
 import Util.URLConstants;
 
 public class HomePageActivity extends AppCompatActivity {
@@ -72,12 +76,7 @@ public class HomePageActivity extends AppCompatActivity {
     }
 
     private void logUserActivity(String activity) {
-        UserDTO userActivity = new UserDTO();
-        userActivity.setUserId(user.getUid());
-        userActivity.setActivity(activity);
-        userActivity.setTargetDevice("None");
-        userActivity.setTime(Calendar.getInstance().getTime().toString());
-        userActivity.setUserName(user.getEmail());
+        UserActivityDTO userActivity = new UserActivityDTO(user.getEmail(), user.getUid(), "None", "WATER_NOW", Calendar.getInstance().getTime().toString());
         String URL = urlConstants.getLogUserActivityURL(config.getHostName());
         try {
             RestInvocation(userActivity, URL, Request.Method.POST);
@@ -87,7 +86,7 @@ public class HomePageActivity extends AppCompatActivity {
         }
     }
 
-    private void RestInvocation(UserDTO userActivity, String URL, int requestType) throws JSONException {
+    private void RestInvocation(UserActivityDTO userActivity, String URL, int requestType) throws JSONException {
         JSONObject requestObject = new JSONObject(gson.toJson(userActivity));
         RequestQueue requestQueue = Volley.newRequestQueue(this);
         JsonObjectRequest request = new JsonObjectRequest(
@@ -96,8 +95,9 @@ public class HomePageActivity extends AppCompatActivity {
                 requestObject,
                 new Response.Listener<JSONObject>() {
                     @Override
-                    public void onResponse(JSONObject response) {
-                        Log.d("logUserActivity", "Rest call to log user activity completed with status:- " + response.toString());
+                    public void onResponse(JSONObject jsonObject) {
+                        ResponseObject response = gson.fromJson(jsonObject.toString(), ResponseObject.class);
+                        Log.d("logUserActivity", "Rest call to log user activity completed with status:- " + response.getStatusCode() + " and message:- " + response.getMessage());
                     }
                 },
                 new Response.ErrorListener() {
@@ -252,5 +252,13 @@ public class HomePageActivity extends AppCompatActivity {
     public void instWaterOption(View view) {
         //saving config to firebase database
         userRef.child("waterNow").setValue("true");
+        startWatering();
+    }
+
+    private void startWatering() {
+        WaterConfigDTO waterConfig = new WaterConfigDTO("", "", "", true);
+        DeviceDTO device = new DeviceDTO("", "", waterConfig);
+        UserActivityDTO userActivity = new UserActivityDTO(user.getEmail(), user.getUid(), "", "WATER_NOW", Calendar.getInstance().getTime().toString());
+        UserActionDTO userAction = new UserActionDTO(userActivity, device);
     }
 }

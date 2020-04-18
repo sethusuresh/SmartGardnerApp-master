@@ -1,12 +1,20 @@
 package com.example.sethu.myapplication.DTO;
 
-public class UserDTO {
+public class UserActivityDTO {
 
     private String userName;
     private String userId;
     private String targetDevice;
     private String activity;
     private String time;
+
+    public UserActivityDTO(String userName, String userId, String targetDevice, String activity, String time) {
+        this.userName = userName;
+        this.userId = userId;
+        this.targetDevice = targetDevice;
+        this.activity = activity;
+        this.time = time;
+    }
 
     public String getUserName() {
         return userName;
